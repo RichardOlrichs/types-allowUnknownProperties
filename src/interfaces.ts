@@ -157,6 +157,7 @@ export type MessageDetails = Partial<ValidationDetails> & {
 } & (
         | { kind?: undefined }
         | { kind: 'missing property'; property: string }
+        | { kind: 'unknown property'; property: string }
         | { kind: 'invalid key'; property: string; failure: Failure }
         | { kind: 'invalid literal'; expected: LiteralValue | LiteralValue[] }
         | { kind: 'invalid basic type'; expected: BasicType | BasicType[]; expectedValue?: LiteralValue }

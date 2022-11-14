@@ -57,6 +57,43 @@ testTypeImpl({
     validConversions: [[{ presenceRequired: undefined }, { presenceRequired: '<empty>' }]],
 });
 
+// Test the allowUnknownProperties configuration.
+// Should be ok if we set undefined explicitly, should throw an error for an unknown property.
+testTypeImpl({
+    name: 'unknownPropertyNotAllowed',
+    type: object({ name: 'unknownPropertyNotAllowed', allowUnknownProperties: false }, { validProperty: specialStringOrUndefined }),
+    validValues: [{ validProperty: undefined }, { validProperty: 'abc' }, { validProperty: 'abc', unknown: undefined }],
+    invalidValues: [
+        [
+            { unknownProperty: 'unknown', validProperty: 'valid' },
+            'error in [unknownPropertyNotAllowed]: unknown property <unknownProperty> [unknownPropertyNotAllowed], got: { unknownProperty: "unknown", validProperty: " .. " }',
+        ],
+    ],
+    validConversions: [[{ validProperty: undefined }, { validProperty: '<empty>' }]],
+});
+
+// Test the allowUnknownProperties configuration in combination with strictMissingKeys.
+// Should fail both when we set undefined explicitly and for an unknown property with a value.
+testTypeImpl({
+    name: 'unknownPropertyNotAllowedPartial',
+    type: partial(
+        { name: 'unknownPropertyNotAllowedPartial', strictMissingKeys: true, allowUnknownProperties: false },
+        { optionalProperty: specialStringOrUndefined },
+    ),
+    validValues: [{}, { optionalProperty: 'ok' }],
+    invalidValues: [
+        [
+            { optionalP: undefined },
+            'error in [unknownPropertyNotAllowedPartial]: unknown property <optionalP> [unknownPropertyNotAllowedPartial], got: { optionalP: undefined }',
+        ],
+        [
+            { optionalP: 'unknown' },
+            'error in [unknownPropertyNotAllowedPartial]: unknown property <optionalP> [unknownPropertyNotAllowedPartial], got: { optionalP: "unknown" }',
+        ],
+    ],
+    validConversions: [[{ optionalProperty: 'ok' }, { optionalProperty: 'ok' }]],
+});
+
 testTypeImpl({
     name: '{ undefinedNotAllowed?: string, undefinedAllowed?: string | undefined }',
     type: object({ strictMissingKeys: true, partial: true }, { undefinedNotAllowed: string, undefinedAllowed: specialStringOrUndefined }),

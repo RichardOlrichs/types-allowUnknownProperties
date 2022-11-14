@@ -84,6 +84,8 @@ function detailMessage(detail: FailureDetails, level: number): string {
             return `expected ${an(`[${detail.type.name}]`)}${maybePrintInputValue(detail)}`;
         case 'missing property':
             return missingPropertyMessage([detail]);
+        case 'unknown property':
+            return unknownPropertyMessage([detail]);
         case 'invalid key': {
             const msg: string = isSingle(detail.failure.details)
                 ? detailMessage(detail.failure.details[0], level + 1)
@@ -206,6 +208,14 @@ function prependWithTypeName(detail: FailureDetails) {
 
 function missingPropertyMessage(details: OneOrMore<FailureDetails & { kind: 'missing property' }>) {
     return `missing ${plural(details, 'property', 'properties')} ${humanList(
+        details,
+        'and',
+        d => `<${printKey(d.property)}> [${d.type.name}]`,
+    )}${maybePrintInputValue(details[0])}`;
+}
+
+function unknownPropertyMessage(details: OneOrMore<FailureDetails & { kind: 'unknown property' }>) {
+    return `unknown ${plural(details, 'property', 'properties')} ${humanList(
         details,
         'and',
         d => `<${printKey(d.property)}> [${d.type.name}]`,

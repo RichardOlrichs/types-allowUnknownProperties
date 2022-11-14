@@ -44,8 +44,11 @@ export interface InterfaceTypeOptions {
      * Note: Any autoCast or parser on nested types will have no effect in 'check' mode.
      */
     checkOnly?: boolean;
-    // /** When constructing values, allow unknown properties to pass unvalidated into the constructed value. */
-    // TODO: allowUnknownProperties?: boolean; // default: false
+    /**
+     * When constructing values, allow unknown properties to pass unvalidated into the constructed value.
+     * Default value is true.
+     */
+    allowUnknownProperties?: boolean;
 }
 
 /**
@@ -79,9 +82,25 @@ export class InterfaceType<Props extends Properties, ResultType>
         if (!unknownRecord.is(input)) {
             return this.createResult(input, undefined, { kind: 'invalid basic type', expected: 'object' });
         }
-        const { strictMissingKeys, partial } = this.options;
-        const constructResult = {} as Record<string, unknown>;
+        const { strictMissingKeys, partial, allowUnknownProperties } = this.options;
         const details: MessageDetails[] = [];
+        const constructResult = {} as Record<string, unknown>;
+
+        // Default is true, we check for explicit false
+        if (allowUnknownProperties === false) {
+            const typeKeys = new Set(Object.keys(this.props));
+            // search for input properties not defined in the type
+            for (const key of Object.keys(input)) {
+                if (!typeKeys.has(key)) {
+                    // If we are not in strictMode and the value is undefined, we do not throw an error.
+                    if (input[key] === undefined && !strictMissingKeys) {
+                        continue;
+                    }
+                    details.push(unknownProperty(key));
+                }
+            }
+        }
+
         for (const [key, innerType] of Object.entries(this.props)) {
             const missingKey = !hasOwnProperty(input, key);
             if (partial) {
@@ -138,6 +157,10 @@ define(InterfaceType, 'createAutoCastAllType', function (this: InterfaceType<Pro
 
 function missingProperty(property: string, type: BaseTypeImpl<unknown>): MessageDetails {
     return { kind: 'missing property', property, type };
+}
+
+function unknownProperty(property: string): MessageDetails {
+    return { kind: 'unknown property', property };
 }
 
 export type FullType<Props extends Properties> = TypeImpl<InterfaceType<Props, TypeOfProperties<Writable<Props>>>>;

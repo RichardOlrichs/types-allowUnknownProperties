@@ -9,5 +9,6 @@
     "typescript.enablePromptUseWorkspaceTsdk": true,
     "files.associations": { "*.json": "jsonc" },
     "javascript.preferences.importModuleSpecifierEnding": "js",
-    "typescript.preferences.importModuleSpecifierEnding": "js"
+    "typescript.preferences.importModuleSpecifierEnding": "js",
+    "task.allowAutomaticTasks": "on"
 }
